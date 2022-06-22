@@ -2,17 +2,17 @@
 
 
 
-##Build
+## Build
 ```azure
 go build
 ```
 
-##Run the app
+## Run the app
 ```azure
 ./xm 
 ```
 
-##Run the tests
+## Run the tests
 ```azure
 go test -v ./...
 ```
