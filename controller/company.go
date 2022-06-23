@@ -64,8 +64,11 @@ func (controller *companyController) add(w http.ResponseWriter, r *http.Request)
 
 	uow.Commit()
 
-	respondJSON(w, http.StatusCreated, toCompanyDTO(company))
-	return
+	responseDTO := toCompanyDTO(company)
+
+	respondJSON(w, http.StatusCreated, responseDTO)
+
+	controller.app.DispatchEvent("company.added", responseDTO)
 }
 
 func (controller *companyController) getAll(w http.ResponseWriter, r *http.Request) {
@@ -172,8 +175,11 @@ func (controller *companyController) update(w http.ResponseWriter, r *http.Reque
 
 	uow.Commit()
 
-	respondJSON(w, http.StatusOK, toCompanyDTO(company))
-	return
+	responseDTO := toCompanyDTO(company)
+
+	respondJSON(w, http.StatusOK, responseDTO)
+
+	controller.app.DispatchEvent("company.updated", responseDTO)
 }
 
 func (controller *companyController) delete(w http.ResponseWriter, r *http.Request) {
@@ -203,7 +209,8 @@ func (controller *companyController) delete(w http.ResponseWriter, r *http.Reque
 	uow.Commit()
 
 	respondJSON(w, http.StatusOK, nil)
-	return
+
+	controller.app.DispatchEvent("company.deleted", toCompanyDTO(company))
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

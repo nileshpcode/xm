@@ -6,6 +6,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/rs/zerolog v1.27.0
 	github.com/satori/go.uuid v1.2.0
+	github.com/streadway/amqp v0.0.0-20190827072141-edfb9018d271
 	gorm.io/driver/sqlite v1.3.4
 	gorm.io/gorm v1.23.6
 )

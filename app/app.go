@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
 	"gorm.io/driver/sqlite"
@@ -9,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"time"
+	"xm/event"
 	"xm/log"
 )
 
@@ -20,6 +22,7 @@ type App struct {
 	Router *mux.Router
 	server *http.Server
 	Logger *zerolog.Logger
+	event.Dispatcher
 }
 
 // Config consists config fields needed to start the app
@@ -33,6 +36,7 @@ func New(name string, config Config) *App {
 	consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
 	app.Logger = log.New(name, config.LogLevel, consoleWriter)
 	app.initializeDB()
+	app.initializeQueue()
 	return app
 }
 
@@ -65,6 +69,16 @@ func (app *App) initializeDB() error {
 	return nil
 }
 
+// initializeQueue connects to queue
+func (app *App) initializeQueue() error {
+	dispatcher, err := event.NewRabbitMQEventDispatcher(app.Logger, getQueueConnectionString())
+	if err != nil {
+		app.Logger.Fatal().Err(err).Msg("failed to connect rabbitmq, exiting the application!")
+	}
+	app.Dispatcher = dispatcher
+	return nil
+}
+
 //Start http server and start listening to the requests
 func (app *App) Start() {
 	if err := app.server.ListenAndServe(); err != nil {
@@ -86,4 +100,28 @@ func (app *App) Stop() {
 // RouteSpecifier should be implemented by the class that sets routes for the API endpoints
 type RouteSpecifier interface {
 	RegisterRoutes(router *mux.Router)
+}
+
+func getQueueConnectionString() string {
+	var queueHost, queuePort, queueUser, queuePassword string
+
+	queueProtocol := "amqp"
+	queueHost, ok := os.LookupEnv("QUEUE_HOST")
+	if !ok {
+		queueHost = "localhost"
+	}
+	queuePassword, ok = os.LookupEnv("QUEUE_PWD")
+	if !ok {
+		queuePassword = "guest"
+	}
+	queueUser, ok = os.LookupEnv("QUEUE_USER")
+	if !ok {
+		queueUser = "guest"
+	}
+	queuePort, ok = os.LookupEnv("QUEUE_PORT")
+	if !ok {
+		queuePort = "5672"
+	}
+
+	return fmt.Sprintf("%v://%v:%v@%v:%v/", queueProtocol, queueUser, queuePassword, queueHost, queuePort)
 }
