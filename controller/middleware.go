@@ -42,7 +42,7 @@ func getUserIP(r *http.Request) string {
 func originCountry() string {
 	origin := os.Getenv("ORIGIN_COUNTRY")
 	if len(origin) == 0 {
-		origin = "IN"
+		origin = "CY"
 		// todo change it to CY when pushed
 	}
 	return origin
