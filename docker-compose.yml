@@ -1,19 +1,33 @@
 version: "3.8"
 
 services:
+  apiserver:
+    build: .
+    networks:
+      - apinet
+    restart: on-failure
+#    environment:
+#      - QUEUE_HOST=queue
+#      - QUEUE_PORT=5672
+    ports:
+      - 8080:8080
+    depends_on:
+      queue:
+        condition: service_healthy
   queue:
     image: rabbitmq:3-management
+    networks:
+      - apinet
+    healthcheck:
+      test: rabbitmq-diagnostics check_port_connectivity
+      timeout: 3s
+      interval: 1s
+      retries: 30
     restart: always
     ports:
       - "15672:15672"
       - "5672:5672"
-  apiserver:
-    build: .
-    ports:
-      - 8080:8080
-    restart: on-failure
-    environment:
-      - QUEUE_HOST=queue
-      - QUEUE_PORT=5672
-    depends_on:
-      - queue
+
+networks:
+  apinet:
+    driver: bridge
